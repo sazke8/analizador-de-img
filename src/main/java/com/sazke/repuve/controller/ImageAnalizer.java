@@ -16,14 +16,14 @@ import java.net.URL;
 public class ImageAnalizer {
 
     private static final String imageUrl = "http://www2.repuve.gob.mx:8080/ciudadania/jcaptcha";
-    private static final String path = "/home/sazke/Documents/repuve/img.jpg";
+    private static final String path = "/home/ultron/Documents/analizador-de-img/img.jpg";
     private int r,g,b;
     private Color color;
-    int umbral = 127;//
+    int umbral = 225;//
 
 
     @GetMapping()
-    public void getImage() throws IOException {
+    public void getImage() throws IOException, InterruptedException {
         URL url = new URL(imageUrl);
         InputStream is = url.openStream();
         OutputStream os = new FileOutputStream(path);
@@ -37,9 +37,10 @@ public class ImageAnalizer {
         File pathToFile = new File(path);
        BufferedImage img = set_Blanco_y_Negro_con_Umbral(ImageIO.read(pathToFile));
        ImageIO.write(img,"jpg",pathToFile);
+       callTerminal();
     }
 
-    public BufferedImage set_Blanco_y_Negro_con_Umbral(BufferedImage f){
+    private BufferedImage set_Blanco_y_Negro_con_Umbral(BufferedImage f){
         BufferedImage bn = new BufferedImage(f.getWidth(),f.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
         //se traspasan los colores Pixel a Pixel
         for(int i=0;i<f.getWidth();i++){
@@ -58,6 +59,24 @@ public class ImageAnalizer {
             }
         }
         return bn;
+    }
+
+    private void callTerminal() throws IOException, InterruptedException {
+        String command = "tesseract "+path+" stdout";
+
+        Process proc = Runtime.getRuntime().exec(command);
+
+        // Read the output
+
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+        String line = "";
+        while((line = reader.readLine()) != null) {
+            System.out.print(line + "\n");
+        }
+
+        proc.waitFor();
     }
 
 
